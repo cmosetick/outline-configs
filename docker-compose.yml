@@ -1,0 +1,73 @@
+---
+# Outline wiki / knowledge base / document repository
+# https://github.com/outline/outline
+
+# Hosting Overview: https://docs.getoutline.com/s/hosting/
+# Docker Overview: https://docs.getoutline.com/s/hosting/doc/docker-7pfeLP5a8t
+# Authentication Overview: https://docs.getoutline.com/s/hosting/doc/authentication-7ViKRmRY5o
+
+services:
+  outline:
+    image: outlinewiki/outline:0.80.2
+    env_file: ./docker.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - storage-data:/var/lib/outline/data
+    depends_on:
+      - postgres
+      - redis
+
+  redis:
+    image: redis:7.4.0
+    env_file: ./docker.env
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.conf:/redis.conf
+    command: ["redis-server", "/redis.conf"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 60s
+      timeout: 60s
+      retries: 4
+
+  postgres:
+    image: postgres:17
+    env_file: ./docker.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - database-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "outline", "-U", "${USERNAME}"]
+      interval: 60s
+      timeout: 60s
+      retries: 4
+    environment:
+      POSTGRES_USER: '${USERNAME}'
+      POSTGRES_PASSWORD: '${PASSPHRASE}'
+      POSTGRES_DB: 'outline'
+
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared
+    container_name: cloudflare-tunnel
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "40m"
+        max-file: "5"
+    command: tunnel run
+    environment:
+      - "TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}"
+    healthcheck:
+      test: ["CMD", "cloudflared", "--version"]
+      interval: 90s
+      timeout: 60s
+      retries: 4
+      start_period: 30s
+
+volumes:
+  storage-data:
+  database-data:
