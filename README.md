@@ -12,8 +12,11 @@ The Google Auth instructions noted on the official outline documenatation are wo
 https://docs.getoutline.com/s/hosting/doc/google-hOuvtCmTqQ
 
 ## 00 Create working directory for your docker related files
+
+```
 mkdir outline-deployment
 cd outline-deployment
+```
 
 ## 01 Create a `docker.env` file  
 
@@ -21,7 +24,12 @@ using the sample from the outline repo
 
 - https://github.com/outline/outline/blob/main/.env.sample
 
-make sure to set the minimum required parameters
+```
+wget https://raw.githubusercontent.com/outline/outline/refs/heads/main/.env.sample
+mv .env.sample docker.env
+```
+
+* make sure to set the minimum required parameters with the env file
 
 ## 02 Prep the database
 using the `docker-compose.yml` file that I have left here inside this repository.
